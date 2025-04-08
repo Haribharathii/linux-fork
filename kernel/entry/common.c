@@ -21,17 +21,17 @@ static inline void syscall_enter_audit(struct pt_regs *regs, long syscall)
 		unsigned long args[6];
 
 		syscall_get_arguments(current, regs, args);
-		audit_syscall_entry(syscall, args[0], args[1], args[2], args[3]);
+		audit_syscall_entry(syscall, args[0], args[1], args[2],
+				    args[3]);
 	}
 }
 
-long syscall_trace_enter(struct pt_regs *regs, long syscall,
-				unsigned long work)
+long syscall_trace_enter(struct pt_regs *regs, long syscall, unsigned long work)
 {
 	long ret = 0;
 
 	/*
-	 * Handle Syscall User Dispatch.  This must comes first, since
+	 * Handle Syscall User Dispatch.  This must come first, since
 	 * the ABI here can be something that doesn't make sense for
 	 * other syscall_work features.
 	 */
@@ -68,7 +68,7 @@ long syscall_trace_enter(struct pt_regs *regs, long syscall,
 
 	syscall_enter_audit(regs, syscall);
 
-	return ret ? : syscall;
+	return ret ?: syscall;
 }
 
 noinstr void syscall_enter_from_user_mode_prepare(struct pt_regs *regs)
@@ -80,7 +80,9 @@ noinstr void syscall_enter_from_user_mode_prepare(struct pt_regs *regs)
 }
 
 /* Workaround to allow gradual conversion of architecture code */
-void __weak arch_do_signal_or_restart(struct pt_regs *regs) { }
+void __weak arch_do_signal_or_restart(struct pt_regs *regs)
+{
+}
 
 /**
  * exit_to_user_mode_loop - do any pending work before leaving to user space
@@ -95,7 +97,6 @@ __always_inline unsigned long exit_to_user_mode_loop(struct pt_regs *regs,
 	 * items have been completed.
 	 */
 	while (ti_work & EXIT_TO_USER_MODE_WORK) {
-
 		local_irq_enable_exit_to_user(ti_work);
 
 		if (ti_work & (_TIF_NEED_RESCHED | _TIF_NEED_RESCHED_LAZY))
@@ -200,7 +201,8 @@ static void syscall_exit_to_user_mode_prepare(struct pt_regs *regs)
 		syscall_exit_work(regs, work);
 }
 
-static __always_inline void __syscall_exit_to_user_mode_work(struct pt_regs *regs)
+static __always_inline void
+__syscall_exit_to_user_mode_work(struct pt_regs *regs)
 {
 	syscall_exit_to_user_mode_prepare(regs);
 	local_irq_disable_exit_to_user();
